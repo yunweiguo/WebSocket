@@ -10,22 +10,20 @@ import tornado.ioloop
 import tornado.autoreload
 import config
 from model import database
-from model.alarm import Alarm
-from model.parking import Parking
-from view.parking import ParkingHandler
-from view.alarm import AlarmHandler
+from view.controller import ControllerHandler
+from view.manual import ManualHandler
+from view.smoke import SmokeHandler
+from view.temperature import TemperatureHandler
+import util
+from model import equipment
 
 
 class Application(tornado.web.Application):
     def __init__(self, route, **kwargs):
         tornado.web.Application.__init__(self, route, **kwargs)
         self.mysqldb = database.mysqldb()
-
-
-class BaseHandler(tornado.web.RequestHandler):
-    @property
-    def db(self):
-        return self.application.mysqldb
+        self.async_redis = database.connect()
+        self.sync_redis = database.s_connect()
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -33,17 +31,10 @@ class MainHandler(tornado.web.RequestHandler):
         self.render("index.html")
 
 
-class ParkingIndexHandler(BaseHandler):
+class ControllerIndexHandler(util.BaseHandler):
     def get(self):
-        parking_spaces = Parking.get_all_parking_space(self.db)
-        self.render("parking.html", data=parking_spaces)
-
-
-class AlarmIndexHandler(BaseHandler):
-    def get(self):
-        alarm_devices = Alarm.get_alarm_device(self.db)
-        print alarm_devices
-        self.render("alarm.html", data=alarm_devices)
+        equipments = equipment.Equipment.get_equipment(self.db)
+        self.render("controller.html", data=equipments)
 
 
 if __name__ == '__main__':
@@ -52,10 +43,11 @@ if __name__ == '__main__':
 
     application = Application([
         (r'/', MainHandler),
-        (r'/index/parking', ParkingIndexHandler),
-        (r'/index/alarm', AlarmIndexHandler),
-        (r'/parking', ParkingHandler),
-        (r'/alarm', AlarmHandler)
+        (r'/controller', ControllerIndexHandler),
+        (r'/manual',  ManualHandler),
+        (r'/smoke', SmokeHandler),
+        (r'/temperature', TemperatureHandler),
+        (r'/ws/controller', ControllerHandler)
     ], **config.settings)
 
     application.listen(7000)
