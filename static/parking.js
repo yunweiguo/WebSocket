@@ -85,7 +85,7 @@ function init() {
                     }else if (type == 'entrance') {
                         state = '--'
                         button_html = "<button class='enter btn btn-default'>进入停车场</button>"
-                                + "<button class='left btn btn-default' disabled='disabled'>离开停车场</button>";
+                                + "<button class='left btn btn-default'>离开停车场</button>";
                     }
 
 

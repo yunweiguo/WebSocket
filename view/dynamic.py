@@ -4,7 +4,8 @@
 
 import json
 import util
-from model import device
+import datetime
+from model import device, history
 import router
 
 
@@ -19,20 +20,36 @@ class ParkingHandler(util.BaseHandler):
     def post(self):
         system = "dynamic"
         device_type = self.get_argument("type")
-        state = self.get_argument("state")
+        device_name = self.get_argument("device_name")
         device_id = self.get_argument("id")
-        temperature = self.get_argument("temperature", "")
-        smokescope = self.get_argument("smokescope", "")
-        device.Device.update_parking_state(device_type, state, self.db)
+        if device_type == 'temperature':
+            temperature = self.get_argument("temperature")
+            info = {"temperature": temperature}
+            device.Device.update_temperature(temperature, device_id, self.db)
+            description = u"{}检测到温度浓度为{}".format(device_name, temperature)
+        elif device_type == 'smoke':
+            smokescope = self.get_argument("smokescope")
+            info = {"smokescope": smokescope}
+            device.Device.update_smoke(smokescope, device_id, self.db)
+            description = u"{}监测到烟雾浓度为{}".format(device_name, smokescope)
         data = {
+            "msg_type": "update",
+            "data": {
+                "id": device_id,
+                "system": system,
+                "type": device_type,
+                "info": info
+            }
+        }
+
+        create_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_history = {
             "id": device_id,
             "system": system,
             "type": device_type,
-            "info": {
-                "temperature": temperature,
-                "smokescope": smokescope
-            }
+            "create_time": create_time,
+            "description": description
         }
+        history.History.add_history(**new_history)
+
         util.ProStatus().brocast(message=json.dumps(data, ensure_ascii=False))
-
-

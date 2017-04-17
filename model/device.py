@@ -31,3 +31,4 @@ class Device(object):
     def update_state(cls, state, device_id, db):
         return db.execute("UPDATE device SET state = %s WHERE id = %s", state, device_id)
 
+

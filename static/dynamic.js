@@ -7,7 +7,47 @@ $(document).ready(function () {
     init();
 
     $("table").delegate(".modify", "click", function () {
-        alert('hh')
+        $(".mod").show();
+        var $parent = $(this).parent().parent();
+        var id = $parent.find(".id").html();
+        var device_name = $parent.find(".name").html();
+        var state = 'off';
+        var type = $parent.find(".type").html();
+        if (type=='smoke'){
+             $(".submit_type").val("smoke")
+        }else{
+             $(".submit_type").val("temperature")
+        }
+
+        $(".confirm").click(function () {
+            var $parent = $(this).parent().parent();
+            var type = $parent.find(".submit_type").val();
+            var val = $parent.find(".inp1").val();
+            var temperature = 0;
+            var smokescope = 0;
+            if (type == "temperature"){
+                temperature = val;
+            }else{
+                smokescope = val;
+            }
+            $.ajax({
+                type: 'POST',
+                url: "/dynamic",
+                data : {
+                     "type": type,
+                    "id": id,
+                    "temperature": temperature,
+                    "smokescope": smokescope,
+                    "device_name": device_name,
+                 },
+                success: function () {
+                    init();
+                }
+            })
+        })
+
+
+
     })
 
 
